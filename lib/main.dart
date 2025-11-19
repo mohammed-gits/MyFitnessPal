@@ -11,7 +11,7 @@ class FitnessTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FitTrackApp',
+      title: 'MyFitnessApp',
       debugShowCheckedModeBanner: false,
       home: const Home(),
     );
