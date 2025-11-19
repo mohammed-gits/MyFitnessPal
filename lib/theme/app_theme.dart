@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
-    const primary = Color(0xFF4C6FFF); // soft bluish
+    const primary = Color(0xFF4C6FFF);
     const background = Color(0xFFF5F7FB);
     const surface = Colors.white;
 
