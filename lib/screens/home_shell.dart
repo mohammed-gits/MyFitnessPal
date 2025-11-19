@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'workouts_screen.dart';
+import 'timer_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,7 +14,7 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _screens = const [
     WorkoutsScreen(),
-    //hun min7ut other screens
+    RestTimerPage(),
   ];
 
   @override

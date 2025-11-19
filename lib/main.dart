@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
 import 'screens/home_shell.dart';
+
 
 void main() {
   runApp(const FitnessTrackerApp());
@@ -13,6 +15,7 @@ class FitnessTrackerApp extends StatelessWidget {
     return MaterialApp(
       title: 'MyFitnessApp',
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
       home: const Home(),
     );
   }
