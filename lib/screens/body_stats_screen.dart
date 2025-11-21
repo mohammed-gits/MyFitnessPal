@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-//hun import lal body model
+import '../models/body_stat.dart';
 
 class BodyStatsScreen extends StatefulWidget {
   const BodyStatsScreen({super.key});
