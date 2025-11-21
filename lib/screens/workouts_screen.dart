@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/workout.dart';
-// import 'workout_detail_screen.dart';
+import 'workout_detail_screen.dart';
 
 class WorkoutsScreen extends StatefulWidget {
   const WorkoutsScreen({super.key});
@@ -149,6 +149,17 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final exercises = w.exercises.length;
 
     return GestureDetector(
+      onTap: () async{
+        await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => WorkoutDetailScreen(workout: w),
+            ),
+        );
+        setState(() {
+          _saveWorkouts();
+        });
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
