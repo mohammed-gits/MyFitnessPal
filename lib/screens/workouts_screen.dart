@@ -218,21 +218,41 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
             // Menu
             PopupMenuButton<String>(
+              color: const Color(0xFF1E1F24), // dark rounded menu
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 6,
               onSelected: (value) {
                 if (value == 'edit') _openEditWorkoutDialog(w);
                 if (value == 'delete') _deleteWorkout(w);
               },
-              itemBuilder: (_) => const [
+              itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'edit',
-                  child: Text('Edit'),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.edit, size: 20, color: Colors.white70),
+                      SizedBox(width: 10),
+                      Text("Edit"),
+                    ],
+                  ),
                 ),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text('Delete'),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.delete, size: 20, color: Colors.redAccent),
+                      SizedBox(width: 10),
+                      Text(
+                        "Delete",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),
