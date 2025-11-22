@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
-    const primary = Color(0xFF4C6FFF);
-    const background = Color(0xFFF5F7FB);
-    const surface = Colors.white;
+    const primary = Color(0xFF8B9DFF);
+    const background = Color(0xFF050816);
+    const surface = Color(0xFF111827);
 
     return ThemeData(
       useMaterial3: true,
@@ -13,6 +13,7 @@ class AppTheme {
         primary: primary,
         background: background,
         surface: surface,
+        brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: background,
       fontFamily: 'Roboto',
@@ -20,10 +21,10 @@ class AppTheme {
         elevation: 0,
         centerTitle: false,
         backgroundColor: background,
-        foregroundColor: Colors.black87,
+        foregroundColor: Colors.white,
       ),
       cardTheme: CardTheme(
-        elevation: 0,
+        elevation: 1,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

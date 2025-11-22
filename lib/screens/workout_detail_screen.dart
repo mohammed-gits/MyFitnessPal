@@ -198,7 +198,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                               'Progress',
                               style:
                               theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.black54,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -251,7 +251,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   'No exercises yet.\nTap the button below to add one.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.black54,
+                    color: Colors.white,
                   ),
                 ),
               )
@@ -283,7 +283,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             '${exercise.sets} sets • ${exercise.reps} reps',
                             style:
                             theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.black54,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 12),

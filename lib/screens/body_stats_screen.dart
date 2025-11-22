@@ -199,7 +199,7 @@ class _BodyStatsScreenState extends State<BodyStatsScreen> {
           child: Text(
             "No progress yet.\nSave today's measurements to see them here.",
             style:
-                theme.textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
           ),
         ),
       );
@@ -258,7 +258,7 @@ class _BodyStatsScreenState extends State<BodyStatsScreen> {
                       Text(
                         _formatDate(e.date),
                         style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.black54),
+                            ?.copyWith(color: Colors.white),
                       ),
                       const SizedBox(width: 12),
                       Expanded(

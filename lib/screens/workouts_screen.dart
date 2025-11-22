@@ -53,6 +53,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           controller: controller,
           decoration: const InputDecoration(
             labelText: 'Workout name',
+            hintText: 'e.g. Chest Day',
           ),
         ),
         actions: [
@@ -207,7 +208,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     child: Text(
                       "$exercises exercise${exercises == 1 ? '' : 's'}",
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -242,9 +243,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             "Workouts",
@@ -254,9 +255,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            "Track your training splits",
+            "Track your training",
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black54,
+              color: Colors.white,
             ),
           ),
         ],
@@ -289,7 +290,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   style: Theme.of(context)
                       .textTheme
                       .bodyLarge
-                      ?.copyWith(color: Colors.black54),
+                      ?.copyWith(color: Colors.white),
                 ),
               )
                   : ListView.separated(
