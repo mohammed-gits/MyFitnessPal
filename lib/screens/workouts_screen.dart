@@ -218,7 +218,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
             // Menu
             PopupMenuButton<String>(
-              color: const Color(0xFF1E1F24), // dark rounded menu
+              color: const Color(0xFF1E1F24),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),

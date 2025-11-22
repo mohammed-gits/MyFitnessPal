@@ -124,7 +124,7 @@ class _RestTimerPageState extends State<RestTimerPage> {
                 'Adjust the time if you need more or less rest.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.black54,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 32),
@@ -161,7 +161,7 @@ class _RestTimerPageState extends State<RestTimerPage> {
                                   : 'Ready / Paused',
                               style:
                               theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.black54,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -208,15 +208,6 @@ class _RestTimerPageState extends State<RestTimerPage> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  TextButton(
-                    onPressed: () {
-                      _pauseTimer();
-                      if (Navigator.of(context).canPop()) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    child: const Text('Skip'),
-                  ),
                 ],
               ),
 
