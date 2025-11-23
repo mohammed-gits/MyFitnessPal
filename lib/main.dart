@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_shell.dart';
 
+// Team Members: Mohammed Osman and Ali Lamaa
 
 void main() {
   runApp(const FitnessTrackerApp());

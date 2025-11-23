@@ -143,7 +143,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
-  // ---------------- UI SECTION ----------------
+  //UI SECTION
 
   Widget _buildWorkoutCard(Workout w) {
     final theme = Theme.of(context);
@@ -284,8 +284,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       ),
     );
   }
-
-  // ---------------- BUILD ----------------
 
   @override
   Widget build(BuildContext context) {
