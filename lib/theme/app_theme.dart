@@ -23,11 +23,11 @@ class AppTheme {
         backgroundColor: background,
         foregroundColor: Colors.white,
       ),
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         elevation: 1,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
