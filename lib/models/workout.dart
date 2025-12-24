@@ -1,5 +1,5 @@
 import 'dart:math';
-
+//Representing the data
 class Workout {
   String id;
   String name;

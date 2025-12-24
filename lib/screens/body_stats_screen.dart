@@ -79,7 +79,8 @@ class _BodyStatsScreenState extends State<BodyStatsScreen> {
   String _formatDate(DateTime d) {
     final day = d.day.toString().padLeft(2, '0');
     final month = d.month.toString().padLeft(2, '0');
-    return '$day/$month';
+    final year = d.year.toString().padLeft(2, '0');
+    return '$day/$month/$year';
   }
 
   Widget _todayCard(BuildContext context) {
