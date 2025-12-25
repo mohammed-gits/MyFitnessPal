@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/workout.dart';
+import '../services/workouts_api.dart';
 import 'workout_detail_screen.dart';
 
 class WorkoutsScreen extends StatefulWidget {
@@ -23,22 +22,21 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   }
 
   Future<void> _loadWorkouts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('workouts');
-
-    if (raw != null) {
-      final list = jsonDecode(raw) as List<dynamic>;
-      _workouts =
-          list.map((e) => Workout.fromMap(e as Map<String, dynamic>)).toList();
+    setState(() => _isLoading = true);
+    try {
+      final list = await WorkoutsApi.fetchWorkouts();
+      if (!mounted) return;
+      setState(() {
+        _workouts = list;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to load workouts")),
+      );
     }
-
-    setState(() => _isLoading = false);
-  }
-
-  Future<void> _saveWorkouts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _workouts.map((w) => w.toMap()).toList();
-    await prefs.setString('workouts', jsonEncode(data));
   }
 
   void _openAddWorkoutDialog() {
@@ -62,21 +60,23 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = controller.text.trim();
               if (name.isEmpty) return;
 
-              setState(() {
-                _workouts.add(
-                  Workout(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: name,
-                  ),
-                );
-              });
-
-              _saveWorkouts();
               Navigator.pop(ctx);
+
+              setState(() => _isLoading = true);
+              try {
+                await WorkoutsApi.createWorkout(name);
+                await _loadWorkouts();
+              } catch (_) {
+                if (!mounted) return;
+                setState(() => _isLoading = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Failed to add workout")),
+                );
+              }
             },
             child: const Text('Add'),
           ),
@@ -104,12 +104,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              final name = controller.text.trim();
-              if (name.isEmpty) return;
-
-              setState(() => workout.name = name);
-              _saveWorkouts();
               Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Rename not implemented in API yet"),
+                ),
+              );
             },
             child: const Text('Save'),
           ),
@@ -131,10 +131,20 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton.tonal(
-            onPressed: () {
-              setState(() => _workouts.remove(w));
-              _saveWorkouts();
+            onPressed: () async {
               Navigator.pop(ctx);
+
+              setState(() => _isLoading = true);
+              try {
+                await WorkoutsApi.deleteWorkout(w.id);
+                await _loadWorkouts();
+              } catch (_) {
+                if (!mounted) return;
+                setState(() => _isLoading = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Failed to delete workout")),
+                );
+              }
             },
             child: const Text('Delete'),
           ),
@@ -143,23 +153,19 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
-  //UI SECTION
-
   Widget _buildWorkoutCard(Workout w) {
     final theme = Theme.of(context);
     final exercises = w.exercises.length;
 
     return GestureDetector(
-      onTap: () async{
+      onTap: () async {
         await Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => WorkoutDetailScreen(workout: w),
-            ),
+          context,
+          MaterialPageRoute(
+            builder: (_) => WorkoutDetailScreen(workout: w),
+          ),
         );
-        setState(() {
-          _saveWorkouts();
-        });
+        await _loadWorkouts();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -171,7 +177,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         ),
         child: Row(
           children: [
-            // Workout icon
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -185,8 +190,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               ),
             ),
             const SizedBox(width: 14),
-
-            // Texts
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,8 +202,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.07),
                       borderRadius: BorderRadius.circular(12),
@@ -215,8 +220,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 ],
               ),
             ),
-
-            // Menu
             PopupMenuButton<String>(
               color: const Color(0xFF1E1F24),
               shape: RoundedRectangleBorder(
@@ -227,11 +230,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 if (value == 'edit') _openEditWorkoutDialog(w);
                 if (value == 'delete') _deleteWorkout(w);
               },
-              itemBuilder: (_) => [
+              itemBuilder: (_) => const [
                 PopupMenuItem(
                   value: 'edit',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.edit, size: 20, color: Colors.white70),
                       SizedBox(width: 10),
                       Text("Edit"),
@@ -241,7 +244,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 PopupMenuItem(
                   value: 'delete',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.delete, size: 20, color: Colors.redAccent),
                       SizedBox(width: 10),
                       Text(
@@ -312,8 +315,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 ),
               )
                   : ListView.separated(
-                padding:
-                const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                 itemCount: _workouts.length,
                 separatorBuilder: (_, __) =>
                 const SizedBox(height: 12),
