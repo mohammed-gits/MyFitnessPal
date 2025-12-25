@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/body_stat.dart';
+import '../services/body_stats_api.dart';
+import '../services/settings_api.dart';
 
 class BodyStatsScreen extends StatefulWidget {
   const BodyStatsScreen({super.key});
@@ -12,303 +11,276 @@ class BodyStatsScreen extends StatefulWidget {
 }
 
 class _BodyStatsScreenState extends State<BodyStatsScreen> {
-  final _weightCtrl = TextEditingController();
-  final _waistCtrl = TextEditingController();
-
-  List<BodyStat> _entries = [];
   bool _loading = true;
 
-  String _goal = 'lose';
-  String _activity = 'light';
+  List<Map<String, dynamic>> _entries = [];
+
+  String _goal = "lose";
+  String _activity = "light";
   bool _reminder = false;
 
   @override
   void initState() {
     super.initState();
-    _loadEntries();
+    _loadAll();
   }
 
-  @override
-  void dispose() {
-    _weightCtrl.dispose();
-    _waistCtrl.dispose();
-    super.dispose();
-  }
+  Future<void> _loadAll() async {
+    setState(() => _loading = true);
+    try {
+      final entries = await BodyStatsApi.fetchEntries();
+      final settings = await SettingsApi.getSettings();
 
-  Future<void> _loadEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('body_stats');
-    if (raw != null) {
-      final list = jsonDecode(raw) as List<dynamic>;
-      _entries = list
-          .map((e) => BodyStat.fromMap(e as Map<String, dynamic>))
-          .toList();
-    }
-    if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _saveEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _entries.map((e) => e.toMap()).toList();
-    await prefs.setString('body_stats', jsonEncode(data));
-  }
-
-  void _saveToday() async {
-    double? parse(String s) {
-      final t = s.trim();
-      if (t.isEmpty) return null;
-      return double.tryParse(t);
-    }
-
-    final weight = parse(_weightCtrl.text);
-    final waist = parse(_waistCtrl.text);
-    if (weight == null && waist == null) return;
-
-    final entry = BodyStat(date: DateTime.now(), weight: weight, waist: waist);
-    setState(() => _entries.insert(0, entry));
-    await _saveEntries();
-    _weightCtrl.clear();
-    _waistCtrl.clear();
-  }
-
-  void _deleteEntry(int index) async {
-    setState(() => _entries.removeAt(index));
-    await _saveEntries();
-  }
-
-  String _formatDate(DateTime d) {
-    final day = d.day.toString().padLeft(2, '0');
-    final month = d.month.toString().padLeft(2, '0');
-    final year = d.year.toString().padLeft(2, '0');
-    return '$day/$month/$year';
-  }
-
-  Widget _todayCard(BuildContext context) {
-    final theme = Theme.of(context);
-    InputDecoration deco(String label) => InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.black.withOpacity(0.02),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        );
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Today's measurements",
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _weightCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: deco('Weight (kg)'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _waistCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: deco('Waist (cm)'),
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed: _saveToday,
-                child: const Text('Save'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _goalCard(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your goal & settings',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _goal,
-              decoration: const InputDecoration(labelText: 'Goal'),
-              items: const [
-                DropdownMenuItem(value: 'lose', child: Text('Lose weight')),
-                DropdownMenuItem(value: 'maintain', child: Text('Maintain')),
-                DropdownMenuItem(value: 'gain', child: Text('Gain muscle')),
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _goal = v);
-              },
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _activity,
-              decoration: const InputDecoration(labelText: 'Activity level'),
-              items: const [
-                DropdownMenuItem(value: 'light', child: Text('Light')),
-                DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
-                DropdownMenuItem(value: 'intense', child: Text('Intense')),
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _activity = v);
-              },
-            ),
-            const SizedBox(height: 4),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Daily reminder to log stats'),
-              value: _reminder,
-              onChanged: (v) => setState(() => _reminder = v),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _latestCard(BuildContext context) {
-    final theme = Theme.of(context);
-    if (_entries.isEmpty) {
-      return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            "No progress yet.\nSave today's measurements to see them here.",
-            style:
-                theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
-          ),
-        ),
+      if (!mounted) return;
+      setState(() {
+        _entries = entries;
+        _goal = (settings["goal"] ?? "lose").toString();
+        _activity = (settings["activity"] ?? "light").toString();
+        _reminder = (settings["reminder"] == true);
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to load body stats")),
       );
     }
-    final e = _entries.first;
-    final w = e.weight != null ? '${e.weight!.toStringAsFixed(1)} kg' : '-';
-    final ws = e.waist != null ? '${e.waist!.toStringAsFixed(1)} cm' : '-';
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  }
+
+  Future<void> _saveSettings() async {
+    try {
+      await SettingsApi.updateSettings(
+        goal: _goal,
+        activity: _activity,
+        reminder: _reminder,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to save settings")),
+      );
+    }
+  }
+
+  void _openAddEntryDialog() {
+    final weightController = TextEditingController();
+    final waistController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Add entry"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Latest progress',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
+            TextField(
+              controller: weightController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Weight (kg)"),
             ),
-            const SizedBox(height: 8),
-            Text('Weight: $w • Waist: $ws',
-                style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 10),
+            TextField(
+              controller: waistController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Waist (cm)"),
+            ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final w = double.tryParse(weightController.text.trim());
+              final wa = double.tryParse(waistController.text.trim());
+
+              if (w == null && wa == null) return;
+
+              Navigator.pop(ctx);
+
+              setState(() => _loading = true);
+              try {
+                await BodyStatsApi.createEntry(weight: w, waist: wa);
+                await _loadAll();
+              } catch (_) {
+                if (!mounted) return;
+                setState(() => _loading = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Failed to add entry")),
+                );
+              }
+            },
+            child: const Text("Add"),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _historyCard(BuildContext context) {
-    final theme = Theme.of(context);
-    if (_entries.isEmpty) return const SizedBox.shrink();
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'History',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: List.generate(_entries.length, (i) {
-                final e = _entries[i];
-                final w =
-                    e.weight != null ? '${e.weight!.toStringAsFixed(1)} kg' : '-';
-                final ws =
-                    e.waist != null ? '${e.waist!.toStringAsFixed(1)} cm' : '-';
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        _formatDate(e.date),
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '$w • $ws',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteEntry(i),
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          size: 20,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _deleteEntry(int id) async {
+    setState(() => _loading = true);
+    try {
+      await BodyStatsApi.deleteEntry(id);
+      await _loadAll();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to delete entry")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        body: SafeArea(
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Body stats')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openAddEntryDialog,
+        icon: const Icon(Icons.add),
+        label: const Text("Add entry"),
+      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           children: [
-            _todayCard(context),
-            const SizedBox(height: 16),
-            _goalCard(context),
-            const SizedBox(height: 16),
-            _latestCard(context),
-            const SizedBox(height: 16),
-            _historyCard(context),
+            Text(
+              "Body Stats",
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "Track your progress",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 18),
+
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Settings",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    DropdownButtonFormField<String>(
+                      value: _goal,
+                      decoration: const InputDecoration(labelText: "Goal"),
+                      items: const [
+                        DropdownMenuItem(value: "lose", child: Text("Lose weight")),
+                        DropdownMenuItem(value: "maintain", child: Text("Maintain")),
+                        DropdownMenuItem(value: "gain", child: Text("Gain weight")),
+                      ],
+                      onChanged: (v) async {
+                        if (v == null) return;
+                        setState(() => _goal = v);
+                        await _saveSettings();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    DropdownButtonFormField<String>(
+                      value: _activity,
+                      decoration: const InputDecoration(labelText: "Activity"),
+                      items: const [
+                        DropdownMenuItem(value: "light", child: Text("Light")),
+                        DropdownMenuItem(value: "moderate", child: Text("Moderate")),
+                        DropdownMenuItem(value: "heavy", child: Text("Heavy")),
+                      ],
+                      onChanged: (v) async {
+                        if (v == null) return;
+                        setState(() => _activity = v);
+                        await _saveSettings();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    SwitchListTile(
+                      value: _reminder,
+                      onChanged: (v) async {
+                        setState(() => _reminder = v);
+                        await _saveSettings();
+                      },
+                      title: const Text("Reminder"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            Text(
+              "Entries",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            if (_entries.isEmpty)
+              Text(
+                "No entries yet. Tap 'Add entry'.",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                ),
+              )
+            else
+              ..._entries.map((e) {
+                final id = (e["id"] as int?) ?? 0;
+                final weight = e["weight"];
+                final waist = e["waist"];
+                final createdAt = (e["createdAt"] ?? "").toString();
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        "Weight: ${weight ?? '-'}  |  Waist: ${waist ?? '-'}",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        createdAt,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.redAccent),
+                        onPressed: id <= 0 ? null : () => _deleteEntry(id),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
           ],
         ),
       ),
